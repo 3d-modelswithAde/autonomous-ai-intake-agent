@@ -156,7 +156,8 @@ async function runSimulation() {
   // REQ 4: Verify n8n workflow file Google Sheets node mappings for Node 5, Node 11, Node 16, Node 21
   console.log('\n--- Verifying n8n Workflow JSON Node Mappings ---');
   const workflowPath = path.join(__dirname, '..', 'workflows', 'marcus_vance_intake_agent.json');
-  const workflow = JSON.parse(fs.readFileSync(workflowPath, 'utf8'));
+  const rawWorkflow = JSON.parse(fs.readFileSync(workflowPath, 'utf8'));
+  const nodes = rawWorkflow.nodes || rawWorkflow.workflow?.nodes || [];
 
   const requiredSheetsNodes = [
     { id: 'node-sheets-log-initial', name: 'Google Sheets: Log Initial Creation' },
@@ -166,9 +167,9 @@ async function runSimulation() {
   ];
 
   for (const target of requiredSheetsNodes) {
-    const node = workflow.nodes.find(n => n.id === target.id || n.name === target.name);
+    const node = nodes.find(n => n.id === target.id || n.name === target.name);
     assert.ok(node, `Workflow missing required Google Sheets node: ${target.name}`);
-    const cols = node.parameters?.columns || {};
+    const cols = node.parameters?.columns?.value || node.parameters?.columns || {};
     assert.ok(cols.Subject, `Node '${target.name}' missing 'Subject' column mapping`);
     assert.ok(cols.AI_Summary, `Node '${target.name}' missing 'AI_Summary' column mapping`);
     assert.ok(cols.Action_Taken, `Node '${target.name}' missing 'Action_Taken' column mapping`);
