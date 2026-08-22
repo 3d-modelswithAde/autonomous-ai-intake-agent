@@ -2,14 +2,14 @@
   "workflow": {
     "id": "zOwAQzXMECWaTcAp",
     "name": "AI Customer Inquiry Intake & CRM Automation",
-    "active": false,
+    "active": true,
     "isArchived": false,
-    "versionId": "b6662f13-46fd-4930-a9c7-fa2947241380",
-    "activeVersionId": null,
-    "triggerCount": 0,
+    "versionId": "b89e59c9-aee2-4ea4-957b-36187caab356",
+    "activeVersionId": "b89e59c9-aee2-4ea4-957b-36187caab356",
+    "triggerCount": 2,
     "nodeCount": 25,
     "createdAt": "2026-08-22T09:58:49.152Z",
-    "updatedAt": "2026-08-22T21:28:24.867Z",
+    "updatedAt": "2026-08-22T22:17:34.384Z",
     "settings": {
       "executionOrder": "v1",
       "availableInMCP": true,
@@ -353,18 +353,17 @@
       },
       {
         "parameters": {
+          "authentication": "oAuth2",
+          "resource": "ticket",
+          "pipelineId": "0",
+          "stageId": "1",
+          "ticketName": "={{ '[' + $('Idempotency & Format Input').item.json.tracking_number + '] ' + $('Idempotency & Format Input').item.json.subject }}",
           "additionalFields": {
             "associatedContactIds": [
               "={{ String($('HubSpot: Find or Create Contact').item.json.vid || $('HubSpot: Find or Create Contact').item.json.id || '') }}"
             ],
             "description": "={{ 'Customer: ' + $('Idempotency & Format Input').item.json.customer_name + ' (' + $('Idempotency & Format Input').item.json.customer_email + ')\\nInquiry ID: ' + $('Idempotency & Format Input').item.json.inquiry_id + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\nMessage:\\n' + $('Idempotency & Format Input').item.json.body }}"
-          },
-          "authentication": "oAuth2",
-          "operation": "create",
-          "pipelineId": "0",
-          "resource": "ticket",
-          "stageId": "1",
-          "ticketName": "={{ '[' + $('Idempotency & Format Input').item.json.tracking_number + '] ' + $('Idempotency & Format Input').item.json.subject }}"
+          }
         },
         "id": "6657bc21-076e-41d6-9642-31f7bc8ae173",
         "name": "HubSpot: Create Support Ticket (First Invariant)",
@@ -445,123 +444,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Vehicle_Year",
-                "id": "Vehicle_Year",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Vehicle_Make",
-                "id": "Vehicle_Make",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Vehicle_Model",
-                "id": "Vehicle_Model",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Vehicle_VIN",
-                "id": "Vehicle_VIN",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Vehicle_Tier",
-                "id": "Vehicle_Tier",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Inquiry_Category",
-                "id": "Inquiry_Category",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Services_Requested",
-                "id": "Services_Requested",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Is_Sensitive",
-                "id": "Is_Sensitive",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Sensitivity_Reason",
-                "id": "Sensitivity_Reason",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Estimated_Cost",
-                "id": "Estimated_Cost",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Pricing_Status",
-                "id": "Pricing_Status",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Customer_Sentiment",
-                "id": "Customer_Sentiment",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "AI_Summary",
-                "id": "AI_Summary",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "HubSpot_Contact_ID",
                 "id": "HubSpot_Contact_ID",
                 "required": false,
@@ -589,24 +471,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Slack_Channel_Notified",
-                "id": "Slack_Channel_Notified",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Automated_Email_Sent",
-                "id": "Automated_Email_Sent",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "Action_Taken",
                 "id": "Action_Taken",
                 "required": false,
@@ -625,8 +489,8 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Error_Details",
-                "id": "Error_Details",
+                "displayName": "AI_Summary",
+                "id": "AI_Summary",
                 "required": false,
                 "type": "string"
               }
@@ -634,15 +498,13 @@
             "value": {
               "AI_Summary": "={{ 'Initial intake logged at ' + $('Idempotency & Format Input').item.json.timestamp }}",
               "Action_Taken": "Ticket Created & Intake Logged",
-              "Automated_Email_Sent": "FALSE",
               "Customer_Email": "={{ $('Idempotency & Format Input').item.json.customer_email }}",
               "Customer_Name": "={{ $('Idempotency & Format Input').item.json.customer_name }}",
               "HubSpot_Contact_ID": "={{ String($('HubSpot: Find or Create Contact').item.json.vid || $('HubSpot: Find or Create Contact').item.json.id || '') }}",
               "HubSpot_Stage": "new_inquiry",
-              "HubSpot_Ticket_ID": "={{ String($('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || $json.id || '') }}",
+              "HubSpot_Ticket_ID": "={{ String($('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') }}",
               "Inquiry_ID": "={{ $('Idempotency & Format Input').item.json.inquiry_id }}",
               "Processing_Status": "CREATED",
-              "Slack_Channel_Notified": "None",
               "Subject": "={{ $('Idempotency & Format Input').item.json.subject }}",
               "Timestamp": "={{ $('Idempotency & Format Input').item.json.timestamp }}",
               "Tracking_Number": "={{ $('Idempotency & Format Input').item.json.tracking_number }}"
@@ -669,8 +531,8 @@
           896,
           192
         ],
-        "onError": "continueRegularOutput",
         "retryOnFail": true,
+        "onError": "continueRegularOutput",
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "GriOKPZxAe6cRM2e",
@@ -739,8 +601,8 @@
       {
         "parameters": {
           "authentication": "oAuth2",
-          "operation": "update",
           "resource": "ticket",
+          "operation": "update",
           "ticketId": "={{ String($('AI Extraction & Intent Classifier').item.json.hubspot_ticket_id || $('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') }}",
           "updateFields": {
             "description": "={{ '⚠️ MANUAL REVIEW REQUIRED: SENSITIVE INQUIRY\\nReason: ' + ($json.sensitivity_reason || 'Sensitive trigger detected') + '\\nSentiment: ' + $json.ai.customer_sentiment + '\\n\\nSummary:\\n' + $json.ai.ai_summary + '\\n\\nAction: Automated email response strictly suppressed.' }}",
@@ -853,15 +715,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Vehicle_VIN",
-                "id": "Vehicle_VIN",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "Vehicle_Tier",
                 "id": "Vehicle_Tier",
                 "required": false,
@@ -907,24 +760,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Estimated_Cost",
-                "id": "Estimated_Cost",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Pricing_Status",
-                "id": "Pricing_Status",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "Customer_Sentiment",
                 "id": "Customer_Sentiment",
                 "required": false,
@@ -943,15 +778,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "HubSpot_Contact_ID",
-                "id": "HubSpot_Contact_ID",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "HubSpot_Ticket_ID",
                 "id": "HubSpot_Ticket_ID",
                 "required": false,
@@ -963,15 +789,6 @@
                 "display": true,
                 "displayName": "HubSpot_Stage",
                 "id": "HubSpot_Stage",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Slack_Channel_Notified",
-                "id": "Slack_Channel_Notified",
                 "required": false,
                 "type": "string"
               },
@@ -1001,15 +818,6 @@
                 "id": "Processing_Status",
                 "required": false,
                 "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Error_Details",
-                "id": "Error_Details",
-                "required": false,
-                "type": "string"
               }
             ],
             "value": {
@@ -1027,7 +835,6 @@
               "Processing_Status": "MANUAL_REVIEW",
               "Sensitivity_Reason": "={{ $('Vehicle Model & Safety Verification').item.json.sensitivity_reason || '' }}",
               "Services_Requested": "={{ ($('AI Extraction & Intent Classifier').item.json.ai.services_requested || []).join(', ') }}",
-              "Slack_Channel_Notified": "#manual-review",
               "Subject": "={{ $('Idempotency & Format Input').item.json.subject }}",
               "Timestamp": "={{ $now.toISO() }}",
               "Tracking_Number": "={{ $('Idempotency & Format Input').item.json.tracking_number }}",
@@ -1058,8 +865,8 @@
           2240,
           0
         ],
-        "onError": "continueRegularOutput",
         "retryOnFail": true,
+        "onError": "continueRegularOutput",
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "GriOKPZxAe6cRM2e",
@@ -1102,8 +909,8 @@
       {
         "parameters": {
           "authentication": "oAuth2",
-          "operation": "update",
           "resource": "ticket",
+          "operation": "update",
           "ticketId": "={{ String($('AI Extraction & Intent Classifier').item.json.hubspot_ticket_id || $('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') }}",
           "updateFields": {
             "description": "={{ 'Needs customer vehicle details or service specifications.\\nTracking Number: ' + $json.tracking_number + '\\nFollow-up email dispatched.' }}",
@@ -1240,15 +1047,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Vehicle_VIN",
-                "id": "Vehicle_VIN",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "Vehicle_Tier",
                 "id": "Vehicle_Tier",
                 "required": false,
@@ -1285,33 +1083,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Sensitivity_Reason",
-                "id": "Sensitivity_Reason",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Estimated_Cost",
-                "id": "Estimated_Cost",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Pricing_Status",
-                "id": "Pricing_Status",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "Customer_Sentiment",
                 "id": "Customer_Sentiment",
                 "required": false,
@@ -1330,15 +1101,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "HubSpot_Contact_ID",
-                "id": "HubSpot_Contact_ID",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "HubSpot_Ticket_ID",
                 "id": "HubSpot_Ticket_ID",
                 "required": false,
@@ -1350,15 +1112,6 @@
                 "display": true,
                 "displayName": "HubSpot_Stage",
                 "id": "HubSpot_Stage",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Slack_Channel_Notified",
-                "id": "Slack_Channel_Notified",
                 "required": false,
                 "type": "string"
               },
@@ -1388,15 +1141,6 @@
                 "id": "Processing_Status",
                 "required": false,
                 "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Error_Details",
-                "id": "Error_Details",
-                "required": false,
-                "type": "string"
               }
             ],
             "value": {
@@ -1413,7 +1157,6 @@
               "Is_Sensitive": "FALSE",
               "Processing_Status": "AWAITING_INFO",
               "Services_Requested": "={{ ($('AI Extraction & Intent Classifier').item.json.ai.services_requested || []).join(', ') }}",
-              "Slack_Channel_Notified": "#intake-notifications",
               "Subject": "={{ $('Idempotency & Format Input').item.json.subject }}",
               "Timestamp": "={{ $now.toISO() }}",
               "Tracking_Number": "={{ $('Idempotency & Format Input').item.json.tracking_number }}",
@@ -1444,8 +1187,8 @@
           2688,
           192
         ],
-        "onError": "continueRegularOutput",
         "retryOnFail": true,
+        "onError": "continueRegularOutput",
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "GriOKPZxAe6cRM2e",
@@ -1469,8 +1212,8 @@
       {
         "parameters": {
           "authentication": "oAuth2",
-          "operation": "update",
           "resource": "ticket",
+          "operation": "update",
           "ticketId": "={{ String($('AI Extraction & Intent Classifier').item.json.hubspot_ticket_id || $('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') }}",
           "updateFields": {
             "description": "={{ 'Intake processed successfully.\\nVehicle: ' + $json.ai.vehicle.year + ' ' + $json.ai.vehicle.make + ' ' + $json.ai.vehicle.model + ' (' + $json.vehicle_tier + ')\\nServices: ' + $json.ai.services_requested.join(', ') + '\\nPricing Status: ' + $json.pricing_status + '\\nEstimated Cost: ' + ($json.estimated_cost ? '$' + $json.estimated_cost : 'Manual Quote Required') + '\\n\\nSummary:\\n' + $json.ai.ai_summary }}",
@@ -1607,15 +1350,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "Vehicle_VIN",
-                "id": "Vehicle_VIN",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "Vehicle_Tier",
                 "id": "Vehicle_Tier",
                 "required": false,
@@ -1645,15 +1379,6 @@
                 "display": true,
                 "displayName": "Is_Sensitive",
                 "id": "Is_Sensitive",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Sensitivity_Reason",
-                "id": "Sensitivity_Reason",
                 "required": false,
                 "type": "string"
               },
@@ -1697,15 +1422,6 @@
                 "canBeUsedToMatch": true,
                 "defaultMatch": false,
                 "display": true,
-                "displayName": "HubSpot_Contact_ID",
-                "id": "HubSpot_Contact_ID",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
                 "displayName": "HubSpot_Ticket_ID",
                 "id": "HubSpot_Ticket_ID",
                 "required": false,
@@ -1717,15 +1433,6 @@
                 "display": true,
                 "displayName": "HubSpot_Stage",
                 "id": "HubSpot_Stage",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Slack_Channel_Notified",
-                "id": "Slack_Channel_Notified",
                 "required": false,
                 "type": "string"
               },
@@ -1755,15 +1462,6 @@
                 "id": "Processing_Status",
                 "required": false,
                 "type": "string"
-              },
-              {
-                "canBeUsedToMatch": true,
-                "defaultMatch": false,
-                "display": true,
-                "displayName": "Error_Details",
-                "id": "Error_Details",
-                "required": false,
-                "type": "string"
               }
             ],
             "value": {
@@ -1782,7 +1480,6 @@
               "Pricing_Status": "={{ $('Deterministic Pricing Engine').item.json.pricing_status }}",
               "Processing_Status": "SUCCESS",
               "Services_Requested": "={{ ($('AI Extraction & Intent Classifier').item.json.ai.services_requested || []).join(', ') }}",
-              "Slack_Channel_Notified": "#intake-notifications",
               "Subject": "={{ $('Idempotency & Format Input').item.json.subject }}",
               "Timestamp": "={{ $now.toISO() }}",
               "Tracking_Number": "={{ $('Idempotency & Format Input').item.json.tracking_number }}",
@@ -1813,8 +1510,8 @@
           2912,
           384
         ],
-        "onError": "continueRegularOutput",
         "retryOnFail": true,
+        "onError": "continueRegularOutput",
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "GriOKPZxAe6cRM2e",
@@ -1835,6 +1532,17 @@
       },
       {
         "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "1gO5iRqJ3qOqAnePk4-3F-oidGo14CkFlO20C68Kiz2U"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "Master_Intake_Log"
+          },
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
@@ -1850,18 +1558,7 @@
               "Tracking_Number": "N/A"
             }
           },
-          "documentId": {
-            "__rl": true,
-            "mode": "id",
-            "value": "1gO5iRqJ3qOqAnePk4-3F-oidGo14CkFlO20C68Kiz2U"
-          },
-          "operation": "append",
-          "options": {},
-          "sheetName": {
-            "__rl": true,
-            "mode": "name",
-            "value": "Master_Intake_Log"
-          }
+          "options": {}
         },
         "id": "a989e3b7-4957-4351-90a0-0df3e6376ff9",
         "name": "Google Sheets: Log Error Trace",
@@ -1871,8 +1568,8 @@
           448,
           608
         ],
-        "onError": "continueRegularOutput",
         "retryOnFail": true,
+        "onError": "continueRegularOutput",
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "GriOKPZxAe6cRM2e",
@@ -1882,12 +1579,11 @@
       },
       {
         "parameters": {
-          "chatId": "AI Customer Operations",
-          "text": "={{ '🚨 CUSTOMER INQUIRY — MANUAL REVIEW REQUIRED\\n\\nCustomer: ' + ($('Idempotency & Format Input').item.json.customer_name || 'Valued Customer') + '\\nEmail: ' + $('Idempotency & Format Input').item.json.customer_email + '\\nPhone: ' + ($('AI Extraction & Intent Classifier').item.json.ai.customer_phone || 'N/A') + '\\nInquiry Category: ' + $('AI Extraction & Intent Classifier').item.json.ai.primary_intent + '\\nVehicle: ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.year || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.make || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.model || 'Unknown') + '\\nServices Requested: ' + ($('AI Extraction & Intent Classifier').item.json.ai.services_requested?.join(', ') || 'N/A') + '\\nReason for Manual Review: ' + ($('Vehicle Model & Safety Verification').item.json.sensitivity_reason || 'Safety/Dispute Trigger') + '\\nHubSpot Ticket ID: ' + $('HubSpot: Create Support Ticket (First Invariant)').item.json.id + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\n\\nAction Required:\\nReview the inquiry in HubSpot before responding to the customer.' }}",
           "additionalFields": {
-            "appendAttribution": false,
-            "message_thread_id": 1
-          }
+            "appendAttribution": false
+          },
+          "chatId": "-1004466592364",
+          "text": "={{ '🚨 CUSTOMER INQUIRY — MANUAL REVIEW REQUIRED\\n\\nCustomer: ' + ($('Idempotency & Format Input').item.json.customer_name || 'Valued Customer') + '\\nEmail: ' + $('Idempotency & Format Input').item.json.customer_email + '\\nInquiry Category: ' + $('AI Extraction & Intent Classifier').item.json.ai.primary_intent + '\\nVehicle: ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.year || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.make || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.model || 'Unknown') + '\\nServices Requested: ' + ($('AI Extraction & Intent Classifier').item.json.ai.services_requested?.join(', ') || 'N/A') + '\\nReason for Manual Review: ' + ($('Vehicle Model & Safety Verification').item.json.sensitivity_reason || 'Safety/Dispute Trigger') + '\\nHubSpot Ticket ID: ' + String($('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\n\\nAction Required:\\nReview the inquiry in HubSpot before responding to the customer.' }}"
         },
         "id": "7f505821-52c6-4f75-bbac-42b32b339175",
         "name": "Telegram: Alert 🔴 Manual Review",
@@ -1908,12 +1604,11 @@
       },
       {
         "parameters": {
-          "chatId": "AI Customer Operations",
-          "text": "={{ 'ℹ️ CUSTOMER INQUIRY — AWAITING INFO\\n\\nCustomer: ' + ($('Idempotency & Format Input').item.json.customer_name || 'Valued Customer') + '\\nEmail: ' + $('Idempotency & Format Input').item.json.customer_email + '\\nInquiry Category: ' + $('AI Extraction & Intent Classifier').item.json.ai.primary_intent + '\\nVehicle: ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.year || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.make || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.model || 'Incomplete') + '\\nHubSpot Ticket ID: ' + $('HubSpot: Create Support Ticket (First Invariant)').item.json.id + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\nProcessing Status: AWAITING_INFO (Automated follow-up sent)' }}",
           "additionalFields": {
-            "appendAttribution": false,
-            "message_thread_id": 2
-          }
+            "appendAttribution": false
+          },
+          "chatId": "-1004466592364",
+          "text": "={{ 'ℹ️ CUSTOMER INQUIRY — AWAITING INFO\\n\\nCustomer: ' + ($('Idempotency & Format Input').item.json.customer_name || 'Valued Customer') + '\\nEmail: ' + $('Idempotency & Format Input').item.json.customer_email + '\\nInquiry Category: ' + $('AI Extraction & Intent Classifier').item.json.ai.primary_intent + '\\nVehicle: ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.year || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.make || '') + ' ' + ($('AI Extraction & Intent Classifier').item.json.ai.vehicle.model || 'Incomplete') + '\\nHubSpot Ticket ID: ' + String($('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\nProcessing Status: AWAITING_INFO (Automated follow-up sent)' }}"
         },
         "id": "b2de5a29-edd1-4781-bd88-52709d64d6ab",
         "name": "Telegram: Post Needs Info to 📥 Intake Notifications",
@@ -1934,12 +1629,11 @@
       },
       {
         "parameters": {
-          "chatId": "AI Customer Operations",
-          "text": "={{ '📥 NEW CUSTOMER INQUIRY — QUOTE DISPATCHED\\n\\nCustomer: ' + ($('Idempotency & Format Input').item.json.customer_name || 'Valued Customer') + '\\nEmail: ' + $('Idempotency & Format Input').item.json.customer_email + '\\nInquiry Category: ' + $('AI Extraction & Intent Classifier').item.json.ai.primary_intent + '\\nVehicle: ' + $('AI Extraction & Intent Classifier').item.json.ai.vehicle.year + ' ' + $('AI Extraction & Intent Classifier').item.json.ai.vehicle.make + ' ' + $('AI Extraction & Intent Classifier').item.json.ai.vehicle.model + '\\nServices Requested: ' + $('AI Extraction & Intent Classifier').item.json.ai.services_requested.join(', ') + '\\nEstimated Cost: ' + ($('Deterministic Pricing Engine').item.json.estimated_cost ? '$' + $('Deterministic Pricing Engine').item.json.estimated_cost.toFixed(2) : 'Manual Quote Required') + '\\nHubSpot Ticket ID: ' + $('HubSpot: Create Support Ticket (First Invariant)').item.json.id + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\nProcessing Status: SUCCESS (Automated quote sent)' }}",
           "additionalFields": {
-            "appendAttribution": false,
-            "message_thread_id": 2
-          }
+            "appendAttribution": false
+          },
+          "chatId": "-1004466592364",
+          "text": "={{ '📥 NEW CUSTOMER INQUIRY — QUOTE DISPATCHED\\n\\nCustomer: ' + ($('Idempotency & Format Input').item.json.customer_name || 'Valued Customer') + '\\nEmail: ' + $('Idempotency & Format Input').item.json.customer_email + '\\nInquiry Category: ' + $('AI Extraction & Intent Classifier').item.json.ai.primary_intent + '\\nVehicle: ' + $('AI Extraction & Intent Classifier').item.json.ai.vehicle.year + ' ' + $('AI Extraction & Intent Classifier').item.json.ai.vehicle.make + ' ' + $('AI Extraction & Intent Classifier').item.json.ai.vehicle.model + '\\nServices Requested: ' + $('AI Extraction & Intent Classifier').item.json.ai.services_requested.join(', ') + '\\nEstimated Cost: ' + ($('Deterministic Pricing Engine').item.json.estimated_cost ? '$' + $('Deterministic Pricing Engine').item.json.estimated_cost.toFixed(2) : 'Manual Quote Required') + '\\nHubSpot Ticket ID: ' + String($('HubSpot: Create Support Ticket (First Invariant)').item.json.objectId || $('HubSpot: Create Support Ticket (First Invariant)').item.json.id || '') + '\\nTracking Number: ' + $('Idempotency & Format Input').item.json.tracking_number + '\\nProcessing Status: SUCCESS (Automated quote sent)' }}"
         },
         "id": "1415d63d-ea0d-49a4-8c00-9b246a7b36f5",
         "name": "Telegram: Post Quote to 📥 Intake Notifications",
@@ -1960,12 +1654,11 @@
       },
       {
         "parameters": {
-          "chatId": "AI Customer Operations",
-          "text": "={{ '⚠️ SYSTEM ALERT\\n\\nWorkflow: AI Customer Inquiry Intake & CRM Automation\\nNode: ' + ($json.execution?.error?.node?.name || 'Unknown Node') + '\\nError: ' + ($json.execution?.error?.message || 'Execution failed') + '\\nTimestamp: ' + $now.toISO() + '\\nAffected Record/Ticket: Execution #' + ($json.execution?.id || 'N/A') + '\\nRecommended Action: Inspect execution logs in n8n and verify external service connectivity.' }}",
           "additionalFields": {
-            "appendAttribution": false,
-            "message_thread_id": 3
-          }
+            "appendAttribution": false
+          },
+          "chatId": "-1004466592364",
+          "text": "={{ '⚠️ SYSTEM ALERT\\n\\nWorkflow: AI Customer Inquiry Intake & CRM Automation\\nNode: ' + ($json.execution?.error?.node?.name || 'Unknown Node') + '\\nError: ' + ($json.execution?.error?.message || 'Execution failed') + '\\nTimestamp: ' + $now.toISO() + '\\nAffected Record/Ticket: Execution #' + ($json.execution?.id || 'N/A') + '\\nRecommended Action: Inspect execution logs in n8n and verify external service connectivity.' }}"
         },
         "id": "69169732-dffa-47f1-a3f6-78abfd91232c",
         "name": "Telegram: Alert ⚠️ System Alerts",
@@ -1985,25 +1678,26 @@
         }
       },
       {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "test-intake-inbound",
+          "options": {}
+        },
         "id": "e33ebe04-8b9a-4859-b5c0-69aa7ec46470",
         "name": "Test Inbound Webhook",
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 2,
         "position": [
           0,
-          360
+          368
         ],
-        "parameters": {
-          "httpMethod": "POST",
-          "options": {},
-          "path": "test-intake-inbound",
-          "responseMode": "onReceived"
-        },
         "webhookId": "f106a296-f20d-4d31-b827-fece3a9e542c"
       }
     ],
     "nodeGroups": [],
-    "activeVersion": null,
+    "activeVersion": {
+      "sameAsDraft": true
+    },
     "meta": {
       "aiBuilderAssisted": true,
       "builderVariant": "mcp",
