@@ -1,0 +1,245 @@
+[
+  {
+    "id": "TC-01",
+    "name": "Normal service inquiry with known vehicle",
+    "input": {
+      "customer_email": "john.camry@example.com",
+      "customer_name": "John Doe",
+      "subject": "Oil change for my 2022 Camry",
+      "body": "Hi, I would like to schedule a synthetic oil change for my 2022 Toyota Camry next Tuesday. Thanks!",
+      "vehicle": {
+        "year": 2022,
+        "make": "Toyota",
+        "model": "Camry",
+        "vin": "4T1B11HK5NU123456",
+        "tier_guess": "tier_1_sedan_coupe"
+      },
+      "services_requested": ["oil change"],
+      "primary_intent": "Booking",
+      "secondary_intent": "routine_maintenance",
+      "inquiry_category": "routine_maintenance",
+      "is_sensitive": false,
+      "customer_sentiment": "neutral",
+      "ai_summary": "Customer requests synthetic oil change for 2022 Toyota Camry."
+    },
+    "expected": {
+      "is_sensitive": false,
+      "primary_intent": "Booking",
+      "secondary_intent": "routine_maintenance",
+      "pricing_status": "quoted_automatically",
+      "estimated_cost": 79.95,
+      "stage": "quote_generated",
+      "slack_channel": "#intake-notifications",
+      "automated_email_sent": true
+    }
+  },
+  {
+    "id": "TC-02",
+    "name": "Normal service inquiry with unknown vehicle",
+    "input": {
+      "customer_email": "alex.custom@example.com",
+      "customer_name": "Alex Vance",
+      "subject": "Brake quote for 2019 Apex Cruiser",
+      "body": "Hello, how much for front brake pads on my 2019 Apex Cruiser?",
+      "vehicle": {
+        "year": 2019,
+        "make": "Apex",
+        "model": "Cruiser",
+        "vin": "9XYZ1234567890ABC",
+        "tier_guess": "unknown_manual"
+      },
+      "services_requested": ["front brake pads"],
+      "primary_intent": "Sales",
+      "secondary_intent": "quote_inquiry",
+      "inquiry_category": "quote_inquiry",
+      "is_sensitive": false,
+      "customer_sentiment": "neutral",
+      "ai_summary": "Customer requesting front brake quote for unmapped model 2019 Apex Cruiser."
+    },
+    "expected": {
+      "is_sensitive": false,
+      "primary_intent": "Sales",
+      "secondary_intent": "quote_inquiry",
+      "pricing_status": "manual_quote_required",
+      "estimated_cost": null,
+      "stage": "quote_generated",
+      "slack_channel": "#intake-notifications",
+      "automated_email_sent": true
+    }
+  },
+  {
+    "id": "TC-03",
+    "name": "Missing vehicle information",
+    "input": {
+      "customer_email": "sarah.mystery@example.com",
+      "customer_name": "Sarah Jenkins",
+      "subject": "Quote for brakes",
+      "body": "Hi Marcus, how much do you charge for a front brake job? Let me know.",
+      "vehicle": {
+        "year": null,
+        "make": null,
+        "model": null,
+        "vin": null,
+        "tier_guess": "unknown"
+      },
+      "services_requested": ["front brake pads"],
+      "missing_required_info": ["vehicle_year", "vehicle_make", "vehicle_model"],
+      "primary_intent": "Sales",
+      "secondary_intent": "quote_inquiry",
+      "inquiry_category": "quote_inquiry",
+      "is_sensitive": false,
+      "customer_sentiment": "neutral",
+      "ai_summary": "Customer requesting brake quote without vehicle details."
+    },
+    "expected": {
+      "is_sensitive": false,
+      "primary_intent": "Sales",
+      "secondary_intent": "quote_inquiry",
+      "stage": "needs_info",
+      "slack_channel": "#intake-notifications",
+      "automated_email_sent": true
+    }
+  },
+  {
+    "id": "TC-04",
+    "name": "Refund request",
+    "input": {
+      "customer_email": "angry.cust@example.com",
+      "customer_name": "Robert Miller",
+      "subject": "UNACCEPTABLE WORK - FULL REFUND DEMAND",
+      "body": "Your shop worked on my transmission last week and now it is leaking fluid everywhere! I demand a full refund request immediately.",
+      "primary_intent": "Complaint",
+      "secondary_intent": "other",
+      "inquiry_category": "sensitive_complaint",
+      "is_sensitive": true,
+      "sensitivity_reason": "Refund demand and complaint regarding transmission repair",
+      "customer_sentiment": "hostile_escalation",
+      "ai_summary": "Customer demanding immediate full refund regarding transmission repair."
+    },
+    "expected": {
+      "is_sensitive": true,
+      "primary_intent": "Complaint",
+      "secondary_intent": "other",
+      "stage": "manual_review",
+      "slack_channel": "#manual-review",
+      "automated_email_sent": false
+    }
+  },
+  {
+    "id": "TC-05",
+    "name": "Legal threat",
+    "input": {
+      "customer_email": "legal.threat@example.com",
+      "customer_name": "Edward Barnes",
+      "subject": "Legal Notice regarding brake failure",
+      "body": "Your mechanic's negligence caused my brakes to fail. My lawyer will be contacting you and we will file a lawsuit in court.",
+      "primary_intent": "Complaint",
+      "secondary_intent": "other",
+      "inquiry_category": "legal_threat",
+      "is_sensitive": true,
+      "sensitivity_reason": "Threat of lawyer, lawsuit, and court action",
+      "customer_sentiment": "hostile_escalation",
+      "ai_summary": "Customer alleging brake failure negligence and threatening attorney / court lawsuit."
+    },
+    "expected": {
+      "is_sensitive": true,
+      "primary_intent": "Complaint",
+      "secondary_intent": "other",
+      "stage": "manual_review",
+      "slack_channel": "#manual-review",
+      "automated_email_sent": false
+    }
+  },
+  {
+    "id": "TC-06",
+    "name": "Booking request",
+    "input": {
+      "customer_email": "mike.truck@example.com",
+      "customer_name": "Mike Davis",
+      "subject": "Book appointment for 2020 F-150 front brakes",
+      "body": "Hi Marcus, I'd like to book an appointment to replace front brake pads on my 2020 Ford F-150 truck next Wednesday morning.",
+      "vehicle": {
+        "year": 2020,
+        "make": "Ford",
+        "model": "F-150",
+        "vin": "1FTFW1E84LFA12345",
+        "tier_guess": "tier_3_truck_van_diesel"
+      },
+      "services_requested": ["front brake pads"],
+      "primary_intent": "Booking",
+      "secondary_intent": "routine_maintenance",
+      "inquiry_category": "routine_maintenance",
+      "is_sensitive": false,
+      "customer_sentiment": "positive",
+      "ai_summary": "Customer booking appointment for 2020 Ford F-150 front brake pad replacement."
+    },
+    "expected": {
+      "is_sensitive": false,
+      "primary_intent": "Booking",
+      "secondary_intent": "routine_maintenance",
+      "pricing_status": "quoted_automatically",
+      "estimated_cost": 269.00,
+      "stage": "quote_generated",
+      "slack_channel": "#intake-notifications",
+      "automated_email_sent": true
+    }
+  },
+  {
+    "id": "TC-07",
+    "name": "Complaint without legal threat",
+    "input": {
+      "customer_email": "frustrated.owner@example.com",
+      "customer_name": "Lisa Ray",
+      "subject": "Disappointed with service delay and dirty seats",
+      "body": "I am writing to express my severe frustration. My car was promised at 2 PM but was not ready until 6 PM, and there was grease on my driver's seat. Marcus needs to address this sensitive complaint.",
+      "vehicle": {
+        "year": 2021,
+        "make": "Honda",
+        "model": "CR-V",
+        "vin": "2HKRW2H88MH123456",
+        "tier_guess": "tier_2_suv_crossover"
+      },
+      "services_requested": [],
+      "primary_intent": "Complaint",
+      "secondary_intent": "other",
+      "inquiry_category": "sensitive_complaint",
+      "is_sensitive": true,
+      "sensitivity_reason": "Customer complaint regarding delayed service and shop cleanliness",
+      "customer_sentiment": "frustrated",
+      "ai_summary": "Customer complaining about severe service delay and grease on vehicle seat."
+    },
+    "expected": {
+      "is_sensitive": true,
+      "primary_intent": "Complaint",
+      "secondary_intent": "other",
+      "stage": "manual_review",
+      "slack_channel": "#manual-review",
+      "automated_email_sent": false
+    }
+  },
+  {
+    "id": "TC-08",
+    "name": "Payment dispute",
+    "input": {
+      "customer_email": "dispute.buyer@example.com",
+      "customer_name": "Amanda Vance",
+      "subject": "Billing issue - double charge",
+      "body": "I was double charged on invoice #4920. If nobody resolves this serious payment dispute today, I will file a chargeback with my credit card company.",
+      "primary_intent": "Payment",
+      "secondary_intent": "other",
+      "inquiry_category": "billing_dispute",
+      "is_sensitive": true,
+      "sensitivity_reason": "Serious payment dispute and chargeback threat",
+      "customer_sentiment": "frustrated",
+      "ai_summary": "Customer reporting double billing dispute and threatening credit card chargeback."
+    },
+    "expected": {
+      "is_sensitive": true,
+      "primary_intent": "Payment",
+      "secondary_intent": "other",
+      "stage": "manual_review",
+      "slack_channel": "#manual-review",
+      "automated_email_sent": false
+    }
+  }
+]

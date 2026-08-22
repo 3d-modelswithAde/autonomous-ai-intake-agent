@@ -1,0 +1,256 @@
+{
+  "business": {
+    "name": "Marcus Vance Automotive",
+    "owner": "Marcus Vance",
+    "intake_email": "service@marcusvanceauto.example.com",
+    "support_phone": "(555) 019-2834",
+    "address": "100 Apex Motorway, Suite A, Automotive Center, CA 90001",
+    "timezone": "America/Los_Angeles",
+    "currency": "USD"
+  },
+  "n8n": {
+    "instance_url": "https://n8n.yourdomain.com",
+    "workflow_name": "Marcus Vance Automotive - Autonomous AI Intake Agent",
+    "polling_interval_minutes": 2,
+    "max_retries": 3,
+    "retry_delay_seconds": 15
+  },
+  "hubspot": {
+    "pipeline_id": "automotive_intake_pipeline",
+    "stages": {
+      "new_inquiry": "1",
+      "manual_review": "2",
+      "needs_info": "3",
+      "quote_generated": "4",
+      "in_progress": "5",
+      "closed_resolved": "6"
+    },
+    "property_group": "intake_agent",
+    "properties": [
+      "inquiry_id",
+      "tracking_number",
+      "inquiry_category",
+      "vehicle_year",
+      "vehicle_make",
+      "vehicle_model",
+      "vehicle_vin",
+      "vehicle_tier",
+      "services_requested",
+      "estimated_cost",
+      "pricing_status",
+      "is_sensitive",
+      "sensitivity_reason",
+      "customer_sentiment",
+      "ai_summary",
+      "action_taken",
+      "gmail_thread_id"
+    ]
+  },
+  "google_sheets": {
+    "spreadsheet_id": "REPLACE_WITH_YOUR_GOOGLE_SPREADSHEET_ID",
+    "tab_name": "Master_Intake_Log",
+    "header_row_index": 1,
+    "columns": [
+      "Timestamp",
+      "Inquiry_ID",
+      "Tracking_Number",
+      "Customer_Email",
+      "Customer_Name",
+      "Customer_Phone",
+      "Vehicle_Year",
+      "Vehicle_Make",
+      "Vehicle_Model",
+      "Vehicle_VIN",
+      "Vehicle_Tier",
+      "Inquiry_Category",
+      "Services_Requested",
+      "Is_Sensitive",
+      "Sensitivity_Reason",
+      "Estimated_Cost",
+      "Pricing_Status",
+      "Customer_Sentiment",
+      "AI_Summary",
+      "HubSpot_Contact_ID",
+      "HubSpot_Ticket_ID",
+      "HubSpot_Stage",
+      "Slack_Channel_Notified",
+      "Automated_Email_Sent",
+      "Processing_Status",
+      "Error_Details"
+    ]
+  },
+  "slack": {
+    "channels": {
+      "notifications": "#intake-notifications",
+      "manual_review": "#manual-review",
+      "errors": "#intake-errors"
+    },
+    "bot_username": "Marcus Vance Intake Agent",
+    "icon_emoji": ":racing_car:"
+  },
+  "ai_model": {
+    "provider": "openai",
+    "model_name": "gpt-4o",
+    "temperature": 0.0,
+    "max_tokens": 1000,
+    "timeout_ms": 30000
+  },
+  "sensitivity_rules": {
+    "quarantine_keywords": [
+      "refund",
+      "refund request",
+      "chargeback",
+      "dispute",
+      "payment dispute",
+      "serious payment dispute",
+      "attorney",
+      "lawyer",
+      "lawsuit",
+      "legal action",
+      "legal threat",
+      "sue",
+      "court",
+      "bbb",
+      "better business bureau",
+      "consumer protection",
+      "regulatory complaint",
+      "attorney general",
+      "damage",
+      "damaged my car",
+      "police",
+      "fraud",
+      "scam",
+      "stolen",
+      "threat",
+      "negligence"
+    ],
+    "auto_quarantine_categories": [
+      "sensitive_complaint",
+      "legal_threat",
+      "billing_dispute"
+    ]
+  },
+  "vehicle_tiers": {
+    "tier_1_sedan_coupe": {
+      "label": "Tier 1: Sedan / Coupe / Hatchback",
+      "examples": ["Camry", "Civic", "Corolla", "Accord", "330i", "Model 3", "Mustang", "Elantra", "Altima"]
+    },
+    "tier_2_suv_crossover": {
+      "label": "Tier 2: Midsize / SUV / Crossover",
+      "examples": ["RAV4", "CR-V", "Explorer", "Grand Cherokee", "Model Y", "Highlander", "Tahoe", "Suburban", "Pilot"]
+    },
+    "tier_3_truck_van_diesel": {
+      "label": "Tier 3: Truck / Van / Heavy Duty Diesel",
+      "examples": ["F-150", "F-250", "F-350", "Silverado", "RAM 1500", "RAM 2500", "Sprinter", "Transit", "Sierra"]
+    },
+    "tier_4_exotic_commercial": {
+      "label": "Tier 4: Exotic / Specialty / Commercial",
+      "examples": ["Porsche 911", "Ferrari", "Lamborghini", "McLaren", "Commercial Box Truck", "Heavy Duty Commercial (>10k lbs)"]
+    },
+    "unknown_manual": {
+      "label": "Unknown / Manual Review Required",
+      "examples": ["Indeterminate or incomplete vehicle details"]
+    }
+  },
+  "pricing_matrix": {
+    "oil_change_synthetic": {
+      "name": "Full Synthetic Oil & Filter Service",
+      "rates": {
+        "tier_1_sedan_coupe": 79.95,
+        "tier_2_suv_crossover": 94.95,
+        "tier_3_truck_van_diesel": 119.95,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Includes up to 5 qts synthetic oil and OEM-spec oil filter (Tier 3 includes up to 8 qts)."
+    },
+    "oil_change_diesel": {
+      "name": "Heavy Duty Diesel Oil Service",
+      "rates": {
+        "tier_1_sedan_coupe": null,
+        "tier_2_suv_crossover": null,
+        "tier_3_truck_van_diesel": 189.95,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Includes heavy duty diesel filter and up to 12 qts heavy duty synthetic diesel oil."
+    },
+    "brake_pads_front": {
+      "name": "Front Brake Pad Replacement",
+      "rates": {
+        "tier_1_sedan_coupe": 189.00,
+        "tier_2_suv_crossover": 219.00,
+        "tier_3_truck_van_diesel": 269.00,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Premium ceramic brake pads, rotor inspection, and hardware lubrication."
+    },
+    "brake_pads_rotors_front": {
+      "name": "Front Brake Pads & Rotors",
+      "rates": {
+        "tier_1_sedan_coupe": 349.00,
+        "tier_2_suv_crossover": 419.00,
+        "tier_3_truck_van_diesel": 499.00,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Front ceramic pads and dynamic balanced replacement disc rotors."
+    },
+    "tire_rotation": {
+      "name": "4-Wheel Tire Rotation & Pressure Check",
+      "rates": {
+        "tier_1_sedan_coupe": 29.95,
+        "tier_2_suv_crossover": 29.95,
+        "tier_3_truck_van_diesel": 39.95,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "4-wheel rotation, digital tread depth measurement, and TPMS pressure check."
+    },
+    "coolant_flush": {
+      "name": "Comprehensive Coolant System Flush",
+      "rates": {
+        "tier_1_sedan_coupe": 149.95,
+        "tier_2_suv_crossover": 169.95,
+        "tier_3_truck_van_diesel": 199.95,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Complete cooling system fluid evacuation and replacement with OEM specification coolant."
+    },
+    "transmission_flush": {
+      "name": "Automatic Transmission Fluid Exchange",
+      "rates": {
+        "tier_1_sedan_coupe": 229.00,
+        "tier_2_suv_crossover": 259.00,
+        "tier_3_truck_van_diesel": 299.00,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Transmission fluid exchange using manufacturer-approved synthetic ATF."
+    },
+    "ac_recharge_r134a": {
+      "name": "A/C System Evacuate & Recharge (R134a)",
+      "rates": {
+        "tier_1_sedan_coupe": 169.00,
+        "tier_2_suv_crossover": 189.00,
+        "tier_3_truck_van_diesel": 219.00,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Vacuum leak check and refrigerant recharge up to 1.5 lbs R134a with UV leak detection dye."
+    },
+    "diagnostic_fee": {
+      "name": "Standard Diagnostic Fee (1 Hour)",
+      "rates": {
+        "tier_1_sedan_coupe": 149.00,
+        "tier_2_suv_crossover": 149.00,
+        "tier_3_truck_van_diesel": 149.00,
+        "tier_4_exotic_commercial": null,
+        "unknown_manual": null
+      },
+      "description": "Comprehensive scan tool diagnostics and certified technician mechanical inspection. 100% credited toward approved repair."
+    }
+  }
+}

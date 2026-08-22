@@ -1,0 +1,23 @@
+{
+  "name": "autonomous-ai-intake-agent",
+  "version": "1.0.0",
+  "description": "Enterprise-grade autonomous AI intake agent for Marcus Vance Automotive using n8n, HubSpot, Gmail, Slack, and Google Sheets",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node tests/run_all_tests.js",
+    "test:pricing": "node tests/test_pricing_engine.js",
+    "test:sensitivity": "node tests/test_sensitivity_filter.js",
+    "test:pipeline": "node tests/test_pipeline_simulator.js"
+  },
+  "keywords": [
+    "n8n",
+    "ai-agent",
+    "automotive-intake",
+    "hubspot",
+    "slack",
+    "google-sheets"
+  ],
+  "author": "Marcus Vance Automotive Engineering",
+  "license": "UNLICENSED"
+}

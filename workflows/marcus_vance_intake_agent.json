@@ -1,0 +1,740 @@
+{
+  "name": "Marcus Vance Automotive - Autonomous AI Intake Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "id": "node-gmail-trigger",
+      "name": "Gmail Inbound Polling Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// Generate internal UUID and human-readable Tracking Number\nconst inquiry_id = `inq_${crypto.randomUUID()}`;\nconst date = new Date();\nconst yyyy = date.getFullYear();\nconst mm = String(date.getMonth() + 1).padStart(2, '0');\nconst dd = String(date.getDate()).padStart(2, '0');\nconst randomSuffix = Math.floor(1000 + Math.random() * 9000);\nconst tracking_number = `TRK-${yyyy}${mm}${dd}-${randomSuffix}`;\n\nconst item = $input.first().json;\nconst fromEmail = item.from?.value?.[0]?.address || item.from || 'customer@example.com';\nconst fromName = item.from?.value?.[0]?.name || item.senderName || 'Valued Customer';\nconst subject = item.subject || 'Inquiry';\nconst bodyText = item.textPlain || item.snippet || item.body || '';\nconst threadId = item.threadId || item.id || '';\n\nreturn [{\n  json: {\n    inquiry_id,\n    tracking_number,\n    customer_email: fromEmail,\n    customer_name: fromName,\n    subject,\n    body: bodyText,\n    thread_id: threadId,\n    timestamp: date.toISOString()\n  }\n}];"
+      },
+      "id": "node-clean-input-formatter",
+      "name": "Idempotency & Format Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.customer_email }}",
+        "additionalFields": {
+          "firstname": "={{ $json.customer_name.split(' ')[0] || '' }}",
+          "lastname": "={{ $json.customer_name.split(' ').slice(1).join(' ') || '' }}"
+        }
+      },
+      "id": "node-hubspot-contact",
+      "name": "HubSpot: Find or Create Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "ticket",
+        "operation": "create",
+        "pipelineId": "automotive_intake_pipeline",
+        "stageId": "1",
+        "ticketName": "={{ '[' + $('Idempotency & Format Input').item.json.tracking_number + '] ' + $('Idempotency & Format Input').item.json.subject }}",
+        "additionalFields": {
+          "hs_pipeline_stage": "1",
+          "inquiry_id": "={{ $('Idempotency & Format Input').item.json.inquiry_id }}",
+          "tracking_number": "={{ $('Idempotency & Format Input').item.json.tracking_number }}",
+          "gmail_thread_id": "={{ $('Idempotency & Format Input').item.json.thread_id }}",
+          "content": "={{ $('Idempotency & Format Input').item.json.body || 'Not provided' }}",
+          "ai_summary": "={{ 'Initial inquiry logged at ' + $('Idempotency & Format Input').item.json.timestamp }}"
+        }
+      },
+      "id": "node-hubspot-create-ticket-first",
+      "name": "HubSpot: Create Support Ticket (First Invariant)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{ $env.GOOGLE_SHEET_ID || 'SPREADSHEET_ID' }}",
+        "range": "Master_Intake_Log!A:Z",
+        "options": {},
+        "columns": {
+          "Timestamp": "={{ $('Idempotency & Format Input').item.json.timestamp }}",
+          "Inquiry_ID": "={{ $('Idempotency & Format Input').item.json.inquiry_id }}",
+          "Tracking_Number": "={{ $('Idempotency & Format Input').item.json.tracking_number }}",
+          "Customer_Email": "={{ $('Idempotency & Format Input').item.json.customer_email }}",
+          "Customer_Name": "={{ $('Idempotency & Format Input').item.json.customer_name }}",
+          "Subject": "={{ $('Idempotency & Format Input').item.json.subject }}",
+          "AI_Summary": "={{ 'Initial intake logged at ' + $('Idempotency & Format Input').item.json.timestamp }}",
+          "HubSpot_Contact_ID": "={{ $('HubSpot: Find or Create Contact').item.json.id }}",
+          "HubSpot_Ticket_ID": "={{ $json.id }}",
+          "HubSpot_Stage": "new_inquiry",
+          "Action_Taken": "Ticket Created & Intake Logged",
+          "Processing_Status": "CREATED"
+        }
+      },
+      "id": "node-sheets-log-initial",
+      "name": "Google Sheets: Log Initial Creation",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0
+        },
+        "messages": {
+          "messageValues": [
+            {
+              "role": "system",
+              "message": "You are the AI intake analysis engine for Marcus Vance Automotive.\nYour job is to extract structured details, classify customer intent, detect sensitive issues, and produce an executive summary.\n\nINTENT CLASSIFICATION RULES:\n1. primary_intent MUST be exactly one of: \"Sales\", \"Complaint\", \"Payment\", \"Booking\", \"Internal Task\".\n   - Sales: Quote inquiries, pricing questions for new repair/service.\n   - Booking: Appointment scheduling, drop-off time requests.\n   - Payment: Invoice questions, payment confirmations, billing inquiries, dispute notices.\n   - Complaint: Dissatisfaction with prior service, delays, repair quality issues, damage claims.\n   - Internal Task: Internal employee messages, vendor correspondence, parts deliveries.\n2. secondary_intent MUST be exactly one of: \"routine_maintenance\", \"mechanical_repair\", \"body_paint\", \"diagnostic\", \"quote_inquiry\", \"appointment_reschedule\", \"general_inquiry\", \"other\".\n3. For sensitive complaints, legal threats, or refund demands, set primary_intent: \"Complaint\" and is_sensitive: true.\n\nSTRICT INVARIANTS:\n1. NEVER invent, assume, or hallucinate vehicle details, VINs, or phone numbers. If not explicitly stated, return null.\n2. SENSITIVE DETECTION: Mark is_sensitive: true if the message mentions refunds, refund requests, chargebacks, disputes, payment disputes, lawsuits, attorneys, lawyers, court, legal action, BBB/regulatory complaints, damage accusations, or hostile escalation.\n3. If is_sensitive is true, state the trigger in sensitivity_reason.\n4. Output ONLY valid JSON adhering to schema:\n{\n  \"customer_name\": string|null,\n  \"customer_phone\": string|null,\n  \"vehicle\": { \"year\": int|null, \"make\": string|null, \"model\": string|null, \"vin\": string|null, \"tier_guess\": \"tier_1_sedan_coupe\"|\"tier_2_suv_crossover\"|\"tier_3_truck_van_diesel\"|\"tier_4_exotic_commercial\"|\"unknown\" },\n  \"primary_intent\": \"Sales\"|\"Complaint\"|\"Payment\"|\"Booking\"|\"Internal Task\",\n  \"secondary_intent\": \"routine_maintenance\"|\"mechanical_repair\"|\"body_paint\"|\"diagnostic\"|\"quote_inquiry\"|\"appointment_reschedule\"|\"general_inquiry\"|\"other\",\n  \"services_requested\": [string],\n  \"missing_required_info\": [string],\n  \"is_sensitive\": boolean,\n  \"sensitivity_reason\": string|null,\n  \"customer_sentiment\": \"positive\"|\"neutral\"|\"frustrated\"|\"hostile_escalation\",\n  \"ai_summary\": string\n}"
+            },
+            {
+              "role": "user",
+              "message": "=Subject: {{ $('Idempotency & Format Input').item.json.subject }}\nBody: {{ $('Idempotency & Format Input').item.json.body }}"
+            }
+          ]
+        }
+      },
+      "id": "node-ai-intake-extractor",
+      "name": "AI Intake Analysis & Classifier",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawAi = $input.first().json;\nlet parsed = {};\n\ntry {\n  const content = rawAi.message?.content || rawAi.text || rawAi;\n  parsed = typeof content === 'string' ? JSON.parse(content.replace(/```json/gi, '').replace(/```/g, '').trim()) : content;\n} catch (e) {\n  parsed = {\n    is_sensitive: false,\n    sensitivity_reason: null,\n    primary_intent: 'Complaint',\n    secondary_intent: 'other',\n    inquiry_category: 'other',\n    services_requested: [],\n    missing_required_info: ['vehicle_details', 'service_details'],\n    customer_sentiment: 'neutral',\n    ai_summary: 'Manual review required due to AI schema parse fallback.'\n  };\n}\n\n// Secondary deterministic regex safety filter for sensitivity\nconst bodyText = ($('Idempotency & Format Input').item.json.subject + ' ' + $('Idempotency & Format Input').item.json.body).toLowerCase();\nconst sensitiveKeywords = ['refund', 'refund request', 'chargeback', 'dispute', 'payment dispute', 'serious payment dispute', 'attorney', 'lawyer', 'lawsuit', 'legal action', 'legal threat', 'sue', 'court', 'bbb', 'better business bureau', 'consumer protection', 'regulatory complaint', 'attorney general', 'damage', 'damaged my car', 'fraud', 'scam', 'stolen', 'threat', 'negligence'];\n\nlet is_sensitive = Boolean(parsed.is_sensitive);\nlet sensitivity_reason = parsed.sensitivity_reason || null;\n\nfor (const kw of sensitiveKeywords) {\n  if (bodyText.includes(kw)) {\n    is_sensitive = true;\n    if (!sensitivity_reason) sensitivity_reason = `Matched safety trigger: \"${kw}\"`;\n    break;\n  }\n}\n\nlet primary_intent = parsed.primary_intent || (is_sensitive ? 'Complaint' : 'Sales');\nif (is_sensitive && primary_intent !== 'Payment') primary_intent = 'Complaint';\nconst secondary_intent = parsed.secondary_intent || parsed.inquiry_category || 'general_inquiry';\n\nconst vehicle = parsed.vehicle || {};\nconst hasVehicle = Boolean(vehicle.year && vehicle.make && vehicle.model);\nconst hasServices = Array.isArray(parsed.services_requested) && parsed.services_requested.length > 0;\nconst missing_info = (!hasVehicle || !hasServices || (parsed.missing_required_info && parsed.missing_required_info.length > 0));\n\nreturn [{\n  json: {\n    ...$('Idempotency & Format Input').item.json,\n    hubspot_ticket_id: $('HubSpot: Create Support Ticket (First Invariant)').item.json.id,\n    ai: {\n      ...parsed,\n      primary_intent,\n      secondary_intent\n    },\n    is_sensitive,\n    sensitivity_reason,\n    missing_info,\n    vehicle,\n    services_requested: parsed.services_requested || []\n  }\n}];"
+      },
+      "id": "node-validate-and-gate",
+      "name": "Validate AI & Safety Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_sensitive }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "node-if-sensitive",
+      "name": "If: Is Sensitive Inquiry?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "ticket",
+        "operation": "update",
+        "ticketId": "={{ $json.hubspot_ticket_id }}",
+        "updateFields": {
+          "hs_pipeline_stage": "2",
+          "is_sensitive": true,
+          "sensitivity_reason": "={{ $json.sensitivity_reason }}",
+          "customer_sentiment": "={{ $json.ai.customer_sentiment }}",
+          "ai_summary": "={{ $json.ai.ai_summary }}",
+          "action_taken": "Quarantined to Manual Review - Email Suppressed"
+        }
+      },
+      "id": "node-hubspot-quarantine-ticket",
+      "name": "HubSpot: Move to Manual Review Required",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#manual-review",
+        "text": "=🚨 URGENT: Sensitive Inquiry Escalation [{{ $json.tracking_number }}]",
+        "otherOptions": {}
+      },
+      "id": "node-slack-manual-review",
+      "name": "Slack: Alert #manual-review (Block Kit)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetId": "={{ $env.GOOGLE_SHEET_ID || 'SPREADSHEET_ID' }}",
+        "range": "Master_Intake_Log!A:Z",
+        "columns": {
+          "Inquiry_ID": "={{ $json.inquiry_id }}",
+          "Customer_Name": "={{ $json.customer_name }}",
+          "Customer_Phone": "={{ $json.ai.customer_phone }}",
+          "Subject": "={{ $json.subject }}",
+          "Inquiry_Category": "={{ $json.ai.primary_intent || 'Complaint' }}",
+          "Is_Sensitive": "TRUE",
+          "Sensitivity_Reason": "={{ $json.sensitivity_reason }}",
+          "Customer_Sentiment": "={{ $json.ai.customer_sentiment }}",
+          "AI_Summary": "={{ $json.ai.ai_summary }}",
+          "HubSpot_Stage": "manual_review",
+          "Slack_Channel_Notified": "#manual-review",
+          "Automated_Email_Sent": "FALSE",
+          "Action_Taken": "Quarantined to Manual Review - Email Suppressed",
+          "Processing_Status": "MANUAL_REVIEW"
+        }
+      },
+      "id": "node-sheets-update-manual-review",
+      "name": "Google Sheets: Log Manual Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2460,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.missing_info }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "node-if-missing-info",
+      "name": "If: Missing Required Info?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "ticket",
+        "operation": "update",
+        "ticketId": "={{ $json.hubspot_ticket_id }}",
+        "updateFields": {
+          "hs_pipeline_stage": "3",
+          "ai_summary": "={{ $json.ai.ai_summary }}",
+          "action_taken": "Requested Missing Details via Automated Email"
+        }
+      },
+      "id": "node-hubspot-needs-info-ticket",
+      "name": "HubSpot: Move to Needs Customer Info",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [
+        2260,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "toEmail": "={{ $json.customer_email }}",
+        "subject": "=[{{ $json.tracking_number }}] Additional Vehicle Details Needed — Marcus Vance Automotive",
+        "message": "=Dear {{ $json.customer_name || 'Valued Customer' }},\n\nThank you for reaching out to Marcus Vance Automotive. We have opened your intake request under tracking reference {{ $json.tracking_number }}.\n\nTo provide you with an exact price estimate, could you please reply with:\n- Vehicle Year, Make, and Model\n- Specific service or symptoms experienced\n\nSimply reply directly to this email.\n\nWarm regards,\nService & Intake Team\nMarcus Vance Automotive",
+        "options": {}
+      },
+      "id": "node-gmail-send-needs-info",
+      "name": "Gmail: Send Missing Info Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2480,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#intake-notifications",
+        "text": "=ℹ️ Needs Customer Info [{{ $json.tracking_number }}]: {{ $json.customer_email }}"
+      },
+      "id": "node-slack-needs-info",
+      "name": "Slack: Post Needs Info to #intake-notifications",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        2700,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetId": "={{ $env.GOOGLE_SHEET_ID || 'SPREADSHEET_ID' }}",
+        "range": "Master_Intake_Log!A:Z",
+        "columns": {
+          "Inquiry_ID": "={{ $json.inquiry_id }}",
+          "Customer_Name": "={{ $json.customer_name }}",
+          "Customer_Phone": "={{ $json.ai.customer_phone }}",
+          "Subject": "={{ $json.subject }}",
+          "Inquiry_Category": "={{ $json.ai.primary_intent || 'Booking' }}",
+          "Services_Requested": "={{ ($json.services_requested || []).join(', ') }}",
+          "Is_Sensitive": "FALSE",
+          "Customer_Sentiment": "={{ $json.ai.customer_sentiment }}",
+          "AI_Summary": "={{ $json.ai.ai_summary }}",
+          "HubSpot_Stage": "needs_info",
+          "Slack_Channel_Notified": "#intake-notifications",
+          "Automated_Email_Sent": "TRUE",
+          "Action_Taken": "Requested Missing Details via Automated Email",
+          "Processing_Status": "AWAITING_INFO"
+        }
+      },
+      "id": "node-sheets-update-needs-info",
+      "name": "Google Sheets: Log Awaiting Info",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2920,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deterministic Pricing Calculation Matrix\nconst PRICING_MATRIX = {\n  'oil_change_synthetic': { rates: { 'tier_1_sedan_coupe': 79.95, 'tier_2_suv_crossover': 94.95, 'tier_3_truck_van_diesel': 119.95 } },\n  'oil_change_diesel': { rates: { 'tier_3_truck_van_diesel': 189.95 } },\n  'brake_pads_front': { rates: { 'tier_1_sedan_coupe': 189.00, 'tier_2_suv_crossover': 219.00, 'tier_3_truck_van_diesel': 269.00 } },\n  'brake_pads_rotors_front': { rates: { 'tier_1_sedan_coupe': 349.00, 'tier_2_suv_crossover': 419.00, 'tier_3_truck_van_diesel': 499.00 } },\n  'tire_rotation': { rates: { 'tier_1_sedan_coupe': 29.95, 'tier_2_suv_crossover': 29.95, 'tier_3_truck_van_diesel': 39.95 } },\n  'coolant_flush': { rates: { 'tier_1_sedan_coupe': 149.95, 'tier_2_suv_crossover': 169.95, 'tier_3_truck_van_diesel': 199.95 } },\n  'transmission_flush': { rates: { 'tier_1_sedan_coupe': 229.00, 'tier_2_suv_crossover': 259.00, 'tier_3_truck_van_diesel': 299.00 } },\n  'ac_recharge_r134a': { rates: { 'tier_1_sedan_coupe': 169.00, 'tier_2_suv_crossover': 189.00, 'tier_3_truck_van_diesel': 219.00 } },\n  'diagnostic_fee': { rates: { 'tier_1_sedan_coupe': 149.00, 'tier_2_suv_crossover': 149.00, 'tier_3_truck_van_diesel': 149.00 } }\n};\n\nconst item = $input.first().json;\nconst vehicle = item.vehicle || {};\nconst tier = vehicle.tier_guess || 'unknown';\n\nif (tier === 'unknown' || tier === 'unknown_manual' || tier === 'tier_4_exotic_commercial') {\n  return [{\n    json: {\n      ...item,\n      pricing_status: 'manual_quote_required',\n      estimated_cost: null,\n      vehicle_tier: tier\n    }\n  }];\n}\n\nlet total = 0;\nlet requiresManual = false;\n\nfor (const s of (item.services_requested || [])) {\n  const clean = s.toLowerCase();\n  let key = null;\n  if (clean.includes('rotors') || clean.includes('pads and rotors')) key = 'brake_pads_rotors_front';\n  else if (clean.includes('brake')) key = 'brake_pads_front';\n  else if (clean.includes('diesel oil')) key = 'oil_change_diesel';\n  else if (clean.includes('oil')) key = 'oil_change_synthetic';\n  else if (clean.includes('tire') || clean.includes('rotation')) key = 'tire_rotation';\n  else if (clean.includes('coolant')) key = 'coolant_flush';\n  else if (clean.includes('transmission')) key = 'transmission_flush';\n  else if (clean.includes('ac') || clean.includes('air conditioning')) key = 'ac_recharge_r134a';\n  else if (clean.includes('diagnostic')) key = 'diagnostic_fee';\n\n  if (key && PRICING_MATRIX[key]?.rates?.[tier]) {\n    total += PRICING_MATRIX[key].rates[tier];\n  } else {\n    requiresManual = true;\n  }\n}\n\nreturn [{\n  json: {\n    ...item,\n    pricing_status: requiresManual ? 'manual_quote_required' : 'quoted_automatically',\n    estimated_cost: requiresManual ? null : parseFloat(total.toFixed(2)),\n    vehicle_tier: tier\n  }\n}];"
+      },
+      "id": "node-pricing-engine",
+      "name": "Deterministic Pricing Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2260,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "ticket",
+        "operation": "update",
+        "ticketId": "={{ $json.hubspot_ticket_id }}",
+        "updateFields": {
+          "hs_pipeline_stage": "4",
+          "vehicle_year": "={{ $json.vehicle.year }}",
+          "vehicle_make": "={{ $json.vehicle.make }}",
+          "vehicle_model": "={{ $json.vehicle.model }}",
+          "vehicle_tier": "={{ $json.vehicle_tier }}",
+          "services_requested": "={{ $json.services_requested.join(', ') }}",
+          "estimated_cost": "={{ $json.estimated_cost }}",
+          "pricing_status": "={{ $json.pricing_status }}",
+          "customer_sentiment": "={{ $json.ai.customer_sentiment }}",
+          "ai_summary": "={{ $json.ai.ai_summary }}",
+          "action_taken": "Quote Sent / Confirmation Dispatched"
+        }
+      },
+      "id": "node-hubspot-quote-ready-ticket",
+      "name": "HubSpot: Update Quote Generated",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "toEmail": "={{ $json.customer_email }}",
+        "subject": "=[{{ $json.tracking_number }}] Service Estimate & Confirmation — Marcus Vance Automotive",
+        "message": "=Dear {{ $json.customer_name || 'Valued Customer' }},\n\nThank you for reaching out to Marcus Vance Automotive. We have logged your service inquiry for your {{ $json.vehicle.year }} {{ $json.vehicle.make }} {{ $json.vehicle.model }} under reference tracking number {{ $json.tracking_number }}.\n\nService Summary:\n- Services: {{ $json.services_requested.join(', ') }}\n- Estimated Total: {{ $json.estimated_cost ? '$' + $json.estimated_cost.toFixed(2) : 'Custom Quote Being Prepared by Advisor' }}\n\nTo schedule your appointment or discuss next steps, please reply directly to this email or call us at (555) 019-2834.\n\nBest regards,\nService & Intake Team\nMarcus Vance Automotive",
+        "options": {}
+      },
+      "id": "node-gmail-send-quote",
+      "name": "Gmail: Send Quote / Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2700,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#intake-notifications",
+        "text": "=📋 Intake Quote Ready [{{ $json.tracking_number }}]: {{ $json.vehicle.year }} {{ $json.vehicle.make }} {{ $json.vehicle.model }} - {{ $json.estimated_cost ? '$' + $json.estimated_cost : 'Manual Quote' }}"
+      },
+      "id": "node-slack-quote-ready",
+      "name": "Slack: Post Quote to #intake-notifications",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        2920,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetId": "={{ $env.GOOGLE_SHEET_ID || 'SPREADSHEET_ID' }}",
+        "range": "Master_Intake_Log!A:Z",
+        "columns": {
+          "Inquiry_ID": "={{ $json.inquiry_id }}",
+          "Customer_Name": "={{ $json.customer_name }}",
+          "Customer_Phone": "={{ $json.ai.customer_phone }}",
+          "Subject": "={{ $json.subject }}",
+          "Vehicle_Year": "={{ $json.vehicle.year }}",
+          "Vehicle_Make": "={{ $json.vehicle.make }}",
+          "Vehicle_Model": "={{ $json.vehicle.model }}",
+          "Vehicle_VIN": "={{ $json.vehicle.vin }}",
+          "Vehicle_Tier": "={{ $json.vehicle_tier }}",
+          "Inquiry_Category": "={{ $json.ai.primary_intent || 'Sales' }}",
+          "Services_Requested": "={{ $json.services_requested.join(', ') }}",
+          "Is_Sensitive": "FALSE",
+          "Estimated_Cost": "={{ $json.estimated_cost }}",
+          "Pricing_Status": "={{ $json.pricing_status }}",
+          "Customer_Sentiment": "={{ $json.ai.customer_sentiment }}",
+          "AI_Summary": "={{ $json.ai.ai_summary }}",
+          "HubSpot_Stage": "quote_generated",
+          "Slack_Channel_Notified": "#intake-notifications",
+          "Automated_Email_Sent": "TRUE",
+          "Action_Taken": "Quote Sent / Confirmation Dispatched",
+          "Processing_Status": "SUCCESS"
+        }
+      },
+      "id": "node-sheets-update-success",
+      "name": "Google Sheets: Log Final Success",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        3140,
+        580
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-global-error-trigger",
+      "name": "Global Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        220,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#intake-errors",
+        "text": "=🛑 System Alert: Intake Pipeline Error in node `{{ $json.execution?.error?.node?.name || 'Unknown Node' }}`"
+      },
+      "id": "node-slack-post-error",
+      "name": "Slack: Alert #intake-errors",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        440,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{ $env.GOOGLE_SHEET_ID || 'SPREADSHEET_ID' }}",
+        "range": "Master_Intake_Log!A:Z",
+        "columns": {
+          "Timestamp": "={{ new Date().toISOString() }}",
+          "Processing_Status": "FAILED",
+          "Error_Details": "={{ $json.execution?.error?.message || 'Workflow Execution Error' }}"
+        }
+      },
+      "id": "node-sheets-log-error",
+      "name": "Google Sheets: Log Error Trace",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        660,
+        800
+      ]
+    }
+  ],
+  "connections": {
+    "Gmail Inbound Polling Trigger": {
+      "main": [
+        [
+          {
+            "node": "Idempotency & Format Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Idempotency & Format Input": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: Find or Create Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: Find or Create Contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: Create Support Ticket (First Invariant)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: Create Support Ticket (First Invariant)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Initial Creation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Log Initial Creation": {
+      "main": [
+        [
+          {
+            "node": "AI Intake Analysis & Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Intake Analysis & Classifier": {
+      "main": [
+        [
+          {
+            "node": "Validate AI & Safety Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate AI & Safety Gate": {
+      "main": [
+        [
+          {
+            "node": "If: Is Sensitive Inquiry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Is Sensitive Inquiry?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: Move to Manual Review Required",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If: Missing Required Info?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: Move to Manual Review Required": {
+      "main": [
+        [
+          {
+            "node": "Slack: Alert #manual-review (Block Kit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Alert #manual-review (Block Kit)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Missing Required Info?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: Move to Needs Customer Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Deterministic Pricing Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: Move to Needs Customer Info": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Missing Info Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Send Missing Info Email": {
+      "main": [
+        [
+          {
+            "node": "Slack: Post Needs Info to #intake-notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Post Needs Info to #intake-notifications": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Awaiting Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Pricing Engine": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: Update Quote Generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: Update Quote Generated": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Quote / Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Send Quote / Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Slack: Post Quote to #intake-notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Post Quote to #intake-notifications": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Final Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Global Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Slack: Alert #intake-errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Alert #intake-errors": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Error Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
